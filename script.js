@@ -1,3 +1,5 @@
+runWithBackoff(run);
+
 function run() {
   const emailElement = document.querySelector('h3[data-test-id="user-title"]');
   const email = emailElement.textContent;
@@ -23,7 +25,7 @@ function run() {
 
   wrap(userIdElement, userLinkElement);
 
-  emailElement.style = "color: #3b6ecc; text-decoration: underline;";
+  userIdElement.style = "color: #3b6ecc; text-decoration: underline;";
 }
 
 function wrap(el, wrapper) {
@@ -31,7 +33,20 @@ function wrap(el, wrapper) {
   wrapper.appendChild(el);
 }
 
-// this is a hack - it takes variable amounts of time for this page to load
-setTimeout(run, 1000);
-setTimeout(run, 2000);
-setTimeout(run, 5000);
+function runWithBackoff(callback, retries = 10, delay = 500) {
+  if (retries < 0) {
+    return;
+  }
+
+  try {
+    callback();
+  } catch (error) {
+    pause(delay).then(() => {
+      runWithBackoff(callback, retries - 1, delay * 2);
+    });
+  }
+}
+
+function pause(duration) {
+  return new Promise(res => setTimeout(res, duration));
+}
