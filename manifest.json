@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+
+  "name": "Sentry-Chirp Extension",
+  "description": "this is handy for sentry users",
+  "version": "1.0",
+
+  "browser_action": {
+   "default_icon": "icon.png"
+  },
+  "permissions": [ "activeTab" ],
+  "content_scripts": [
+    {
+      "matches": ["https://sentry.io/organizations/chirp/issues/*"],
+      "js": ["script.js"]
+    }
+  ]
+}
