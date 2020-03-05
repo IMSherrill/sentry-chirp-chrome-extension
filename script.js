@@ -1,7 +1,6 @@
 // runWithBackoff is sort of a hack - the frontend on this page takes a bit to load, and that time can vary
 runWithBackoff(addLinks)
   .then(() => {
-    console.log("set up observer");
     // set up observer to add new links when relevant DOM changes occur
     const observer = new MutationObserver(addLinks);
     const eventContainerNode = document.querySelector("div.primary");
