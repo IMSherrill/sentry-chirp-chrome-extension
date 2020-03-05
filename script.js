@@ -1,31 +1,40 @@
-runWithBackoff(run);
+// runWithBackoff is sort of a hack - the frontend on this page takes a bit to load, and that time can vary
+runWithBackoff(addLinks)
+  .then(() => {
+    console.log("set up observer");
+    // set up observer to add new links when relevant DOM changes occur
+    const observer = new MutationObserver(addLinks);
+    const eventContainerNode = document.querySelector("div.primary");
+    observer.observe(eventContainerNode, { childList: true });
+  })
+  .catch(err => console.log(err));
 
-function run() {
-  const emailElement = document.querySelector('h3[data-test-id="user-title"]');
-  const email = emailElement.textContent;
+function addLinks() {
+  const emailNode = document.querySelector('h3[data-test-id="user-title"]');
+  const email = emailNode.textContent;
   const emailSearchUrl = `https://admin.chirpbooks.com/admin/users?&email=${email}`;
 
-  const emailLinkElement = document.createElement("a");
-  emailLinkElement.href = emailSearchUrl;
-  emailLinkElement.target = "_blank";
+  const emailLinkNode = document.createElement("a");
+  emailLinkNode.href = emailSearchUrl;
+  emailLinkNode.target = "_blank";
 
-  wrap(emailElement, emailLinkElement);
+  wrap(emailNode, emailLinkNode);
 
-  emailElement.style = "color: #3b6ecc; text-decoration: underline;";
+  emailNode.style = "color: #3b6ecc; text-decoration: underline;";
 
   const textContextDiv = document.querySelector(".context-item.user");
-  const userIdElement = textContextDiv.lastElementChild;
-  const userIdElementText = userIdElement.textContent;
-  const userId = userIdElementText.split("CHIRP_")[1];
+  const userIdNode = textContextDiv.lastElementChild;
+  const userIdNodeText = userIdNode.textContent;
+  const userId = userIdNodeText.split("CHIRP_")[1];
   const userIdUrl = `https://admin.chirpbooks.com/admin/users/${userId}`;
 
   const userLinkElement = document.createElement("a");
   userLinkElement.href = userIdUrl;
   userLinkElement.target = "_blank";
 
-  wrap(userIdElement, userLinkElement);
+  wrap(userIdNode, userLinkElement);
 
-  userIdElement.style = "color: #3b6ecc; text-decoration: underline;";
+  userIdNode.style = "color: #3b6ecc; text-decoration: underline;";
 }
 
 function wrap(el, wrapper) {
@@ -34,17 +43,26 @@ function wrap(el, wrapper) {
 }
 
 function runWithBackoff(callback, retries = 10, delay = 500) {
-  if (retries < 0) {
-    return;
-  }
+  return new Promise((resolve, reject) => {
+    if (retries < 0) {
+      reject();
+    }
 
-  try {
-    callback();
-  } catch (error) {
-    pause(delay).then(() => {
-      runWithBackoff(callback, retries - 1, delay * 2);
-    });
-  }
+    try {
+      callback();
+      resolve();
+    } catch (error) {
+      pause(delay).then(() => {
+        runWithBackoff(callback, retries - 1, delay * 2)
+          .then(() => {
+            resolve();
+          })
+          .catch(e => {
+            reject();
+          });
+      });
+    }
+  });
 }
 
 function pause(duration) {
